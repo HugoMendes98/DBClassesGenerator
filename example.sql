@@ -3,7 +3,7 @@ CREATE DATABASE example;
 
 USE example;
 
-CREATE TABLE tblTest (
+CREATE TABLE tblDefaultPage (
 	_id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
 	name VARCHAR(30) NOT NULL UNIQUE
 );
@@ -11,10 +11,10 @@ CREATE TABLE tblTest (
 CREATE TABLE tblUser (
 	_id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
 
-	test_id INT,
+	defaultPage_id INT,
 
-	FOREIGN KEY (test_id)
-	REFERENCES tblTest(_id),
+	FOREIGN KEY (defaultPage_id)
+	REFERENCES tblDefaultPage(_id),
 
 	username VARCHAR(50) NOT NULL UNIQUE,
 	password VARCHAR(240) NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE tblUser (
 
 	creationTime DATETIME DEFAULT NOW(),
 	modificationTime DATETIME ON UPDATE NOW(),
-	lastTime DATETIME DEFAULT NULL
+	lastTime DATE DEFAULT NULL
 );
 
 CREATE TABLE tblGroup (
@@ -51,9 +51,9 @@ CREATE TABLE tblUsrGrp (
 	REFERENCES tblGroup(_id)
 );
 
-INSERT INTO tblTest (name) VALUES ('asdasd'), ('sdsd');
+INSERT INTO tblDefaultPage (name) VALUES ('asdasd'), ('sdsd');
 
-INSERT INTO tblUser (username, password, token, email, test_id) VALUES ('admin', 'password', '', '', null), ('admin2', 'password', '2', '', 1);
+INSERT INTO tblUser (username, password, token, email, defaultPage_id) VALUES ('admin', 'password', '', '', null), ('admin2', 'password', '2', '', 1);
 INSERT INTO tblGroup (name) VALUES ('admin'), ('grp');
 
 INSERT INTO tblUsrGrp (user_id, group_id) VALUES (1,1), (1,2), (2,1);

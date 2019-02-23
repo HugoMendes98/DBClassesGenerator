@@ -22,7 +22,7 @@ class DB extends PDO {
     public function execute($query, array $attributes = []) {
         $stmt = $this->prepare($query);
         $ok = $stmt->execute($attributes);
-        if (!$ok) var_dump($stmt->errorInfo());
+        if (!$ok) var_dump($stmt->errorInfo()); // TODO: log it
         return $ok ? $stmt->fetchAll() : false;
     }
 }

@@ -1,0 +1,13 @@
+{
+    "class": "class %1$s extends Model {\n\tprotected static $tblName = Configuration::DB_PREFIX . '%1$s';\n\n\t/* ------- Static functions ------- */\n%2$s\t/* ---------- Properties ---------- */\n%3$s\n%4$s\t/* ------- Object functions ------- */\n%5$s\n%6$s}",
+    "construct": "\t/** \n\t * @param int $id\n\t */\n\tpublic function __construct(int $id) {\n\t\t$data = parent::__construct($id);\n\t\tif ($data) {\n%s\t\t}\n\t}\n",
+    "construct_get": "\t\t\tif (isset($data['%1$s'])) $this->%1$s = $data['%1$s'];\n",
+    "file": "<?php\n%s\n%s",
+    "get": "\t/** \n\t * @return %3$s\n\t */\n\tpublic function get%1$s(): %3$s {%4$s\n\t\treturn $this->%2$s;\n\t}\n\n",
+    "get_foreign": "\n\t\tif (!$this->%1$s instanceof %2$s)\n\t\t\t$this->%1$s = new %2$s($this->%1$s);",
+    "get_by": "\t/** \n\t * @param %1$s $%2$s\n\t * @return %1$s[]\n\t */\n\tpublic static function getBy%1$s(%1$s $%2$s) {\n\t\t$returns = [];\n\t\tforeach (self::getAll() as $r)\n\t\t\tif ($r->get%1$s()->getId() === $%2$s->getId()) $returns[] = $r;\n\t\treturn $returns;\n\t}\n\n",
+    "private_var": "\tprivate $%1$s = %2$s;\n",
+    "require_once": "require_once __DIR__ . '/%s.php';\n",
+    "set": "\t/**\n\t * @param %4$s $%2$s\n\t * @return bool in case of success\n\t */\n\tpublic function set%1$s(%4$s $%2$s) {\n\t\tif (parent::update([\"%3$s\" => $%2$s])) {\n\t\t\t$this->%3$s = $%2$s;\n\t\t\treturn true;\n\t\t}\n\t\treturn false;\n\t}\n\n",
+    "update": "\t/**\n\t * Update %s\n\t * @param array $params (can send Model instances)\n\t * @return bool in case of success\n\t */\n\tpublic function update(array $params = []): bool {\n\t\t// If you want to make some improvement\n\t\treturn parent::update($params);\n\t}\n"
+}

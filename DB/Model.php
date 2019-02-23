@@ -17,7 +17,7 @@ class Model {
     public static function getAll() {
         if (self::$all == null) {
             self::$all = [];
-            $sth = Configuration::DB()->query(sprintf("SELECT _id FROM %s;", static::$tblName));
+            $sth = Configuration::DB()->query(sprintf("SELECT _id FROM `%s`;", static::$tblName));
             while ($sth && $m = $sth->fetch())
                 self::$all[] = new static($m["_id"]);
         }
@@ -27,10 +27,10 @@ class Model {
 	/**
 	 * Delete an entry (! Foreign key)
 	 * @param int $id
-	 * @return bool if successed
+	 * @return bool in case of success
 	 */
 	public static function delete(int $id) {
-		return is_array(Configuration::DB()->execute(sprintf("DELETE FROM %s WHERE _id = :id", static::$tblName), ["id" => $id]));
+		return is_array(Configuration::DB()->execute(sprintf("DELETE FROM `%s` WHERE _id = :id", static::$tblName), ["id" => $id]));
 	}
 
     private $_id = -1;
@@ -48,11 +48,34 @@ class Model {
 	 * @param int $id
 	 */
     public function __construct(int $id) {
-		$data = Configuration::DB()->execute('SELECT * FROM `'.static::$tblName.'` WHERE _id = :id', ["id" => $id]);
+		$data = Configuration::DB()->execute(sprintf('SELECT * FROM `%s` WHERE _id = :id', static::$tblName), ["id" => $id]);
 		if (!empty($data)) {
 			$data = $data[0];
 			$this->_id = $data["_id"];
 			return $data;
 		}
     }
+
+	/**
+	 * Update an entry
+	 * @param array $params (can send Model instances)
+	 * @return bool in case of success
+	 */
+    public function update(array $params): bool {
+    	if (empty($params)) return true;
+
+    	$sql = "";
+		foreach ($params as $key => $val) {
+			if ($val instanceof Model) // Send null for empty foreign key
+				$params[$key] = $val->getId() <= 0 ? null : $val->getId();
+			elseif ($val instanceof DateTime)
+				$params[$key] = $val->format('Y-m-d H:i:s');
+			$sql.= "$key = :$key, ";
+    	}
+
+    	if ($sql != "") $sql = rtrim($sql, ', ');
+
+		$params["id"] = $this->getId();
+    	return is_array(Configuration::DB()->execute(sprintf('UPDATE `%s` SET %s WHERE _id = :id', static::$tblName, $sql), $params));
+	}
 }

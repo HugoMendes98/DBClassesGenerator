@@ -1,9 +1,14 @@
 <?php require_once __DIR__ . '/DB/DB.php';
 
 class Configuration {
-    // const uploaddir = PUBLIC_FOLDER . 'up/';
-
-	const DB_PREDFIX = 'tbl';
+	/**
+	 * Prefix of the tables
+	 */
+	const DB_PREFIX = 'tbl';
+	/**
+     * End Word that means the field is an id or an foreign key
+     */
+	const DB_ENDWORD_ID = '_id';
 
     private static $db_name = "example";
     private static $db_host = "localhost";
