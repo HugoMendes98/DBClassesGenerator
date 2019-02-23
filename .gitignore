@@ -1,0 +1,12 @@
+.*
+*~
+*.swp
+*.swo
+
+Configuration.php
+
+DB/*
+!DB/DB.php
+!DB/Model.php
+
+!.gitignore

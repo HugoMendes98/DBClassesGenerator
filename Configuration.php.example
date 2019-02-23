@@ -1,0 +1,23 @@
+<?php require_once __DIR__ . '/DB/DB.php';
+
+class Configuration {
+    // const uploaddir = PUBLIC_FOLDER . 'up/';
+
+	const DB_PREDFIX = 'tbl';
+
+    private static $db_name = "example";
+    private static $db_host = "localhost";
+    private static $db_port = "3306";
+    private static $db_user = "root";
+    private static $db_pass = "password";
+    private static $DB = null;
+    
+    /**
+     * @return DB
+     */
+    public static function DB(): DB {
+        if (self::$DB == null)
+            self::$DB = new DB(self::$db_user, self::$db_pass, self::$db_name, self::$db_host, self::$db_port);
+        return self::$DB;
+    }
+}
