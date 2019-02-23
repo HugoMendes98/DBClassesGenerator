@@ -3,7 +3,7 @@
 function convertSql2PhpType($type) {
 	if (strpos($type, 'TINYINT') !== false)
 		return 'bool';
-	if (strpos($type, 'VARCHAR') !== false || strpos($type, 'TEXT'))
+	if (strpos($type, 'VARCHAR') !== false || strpos($type, 'TEXT') !== false)
 		return 'string';
 	if (strpos($type, 'INT') !== false)
 		return 'int';
@@ -78,7 +78,10 @@ function createClassFile($name, $cols) {
 			$innerGet = sprintf($fileParts["get_foreign"], $fieldName, "DateTime");
 		}
 
-		$propertiesContent.= sprintf($fileParts["get"], $funcName, $fieldName, $type, $innerGet) . sprintf($fileParts["set"], $funcName, lcfirst($funcName), $fieldName, $type);
+		if ($type === "bool" && (substr(strtolower($fieldName), 0, 2) == 'is' || substr(strtolower($fieldName), 0, 3) == 'has')) {
+			$propertiesContent.= sprintf($fileParts["get_bool"], $fieldName);
+		} else // int for bool when we set
+			$propertiesContent.= sprintf($fileParts["get"], $funcName, $fieldName, $type, $innerGet) . sprintf($fileParts["set"], $funcName, lcfirst($funcName), $fieldName, $type === "bool" ? "int" : $type);
 		$constructContent.= sprintf($fileParts["construct_get"], $fieldName);
 	}
 
