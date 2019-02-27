@@ -8,20 +8,26 @@ class Model {
 	 */
     protected static $tblName = '';
 
-    private static $all = null;
+    /**
+     * Children should not have access this
+     * @var array
+     */
+    private static $all = [];
 
 	/**
 	 * Return all
 	 * @return static[]
 	 */
-    public static function getAll() {
-        if (self::$all == null) {
-            self::$all = [];
+    public static function getAll() { // Return by class
+        $class = static::class . static::$tblName; // to be unique
+
+        if (self::$all[$class] == null) {
+            self::$all[$class] = [];
             $sth = Configuration::DB()->query(sprintf("SELECT _id FROM `%s`;", static::$tblName));
             while ($sth && $m = $sth->fetch())
-                self::$all[] = new static($m["_id"]);
+                self::$all[$class][] = new static($m["_id"]);
         }
-        return self::$all;
+        return self::$all[$class];
     }
 
 	/**
