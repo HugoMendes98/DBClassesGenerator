@@ -1,7 +1,7 @@
 <?php require_once './Configuration.php';
 
 function convertSql2PhpType($type) {
-	if (strpos($type, 'TINYINT') !== false)
+	if (strpos($type, 'TINYINT(1)') !== false)
 		return 'bool';
 	if (strpos($type, 'VARCHAR') !== false || strpos($type, 'TEXT') !== false)
 		return 'string';
