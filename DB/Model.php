@@ -89,7 +89,6 @@ class Model {
         if (!isset(self::$all[$class])) {
             self::$all[$class] = [];
             $models = self::select(['_id']);
-            var_dump($models);
             if ($models !== false)
             	foreach ($models as $model)
 					self::$all[$class][] = new static($model["_id"]);
@@ -211,7 +210,7 @@ class Model {
 	 * @param int $id
 	 */
     public function __construct(int $id) {
-		$data = Configuration::DB()->execute(sprintf("SELECT * FROM `%s` WHERE _id = :id", static::$tblName), ["id" => $id]);
+		$data = self::select(['*'], [["_id" => $id]]);
 		if (!empty($data)) {
 			$data = $data[0];
 			$this->_id = $data["_id"];
