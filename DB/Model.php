@@ -3,6 +3,70 @@
 class Model {
 
 	/**
+	 * Database operators
+	 */
+	private const DB_OPERATORS = [
+		10 => ' OR ',
+		11 => ' AND ',
+		12 => '(',
+		13 => ')',
+		15 => ' BETWEEN ',
+		20 => ' = ',
+		21 => ' != ',
+		22 => ' > ',
+		23 => ' >= ',
+		24 => ' < ',
+		25 => ' <= ',
+	];
+
+	/**
+	 * Or
+	 */
+	protected const DB_OR = 10;
+	/**
+	 * And
+	 */
+	protected const DB_AND = 11;
+	/**
+	 * create a group '('
+	 */
+	protected const DB_GROUPSTART = 12;
+	/**
+	 * close a group ')'
+	 */
+	protected const DB_GROUPEND = 13;
+
+	/**
+	 * Between 2 values
+	 */
+	protected const DB_BETWEEN = 15;
+
+	/**
+	 * equal
+	 */
+	protected const DB_EQ = 20;
+	/**
+	 * not equal
+	 */
+	protected const DB_NE = 21;
+	/**
+	 * greater than
+	 */
+	protected const DB_GT = 22;
+	/**
+	 * greater than or equal
+	 */
+	protected const DB_GE = 23;
+	/**
+	 * less than
+	 */
+	protected const DB_LT = 24;
+	/**
+	 * less than or equal
+	 */
+	protected const DB_LE = 25;
+
+	/**
 	 * Name of the table in the database
 	 * @var string
 	 */
@@ -22,14 +86,83 @@ class Model {
     public static function getAll() { // Return by class
         $class = static::class . static::$tblName; // to be unique
 
-        if (self::$all[$class] == null) {
+        if (!isset(self::$all[$class])) {
             self::$all[$class] = [];
-            $sth = Configuration::DB()->query(sprintf("SELECT _id FROM `%s`;", static::$tblName));
-            while ($sth && $m = $sth->fetch())
-                self::$all[$class][] = new static($m["_id"]);
+            $models = self::select(['_id']);
+            var_dump($models);
+            if ($models !== false)
+            	foreach ($models as $model)
+					self::$all[$class][] = new static($model["_id"]);
         }
         return self::$all[$class];
     }
+
+	/**
+	 * Do a select
+	 * @param array $fields
+	 * @param array $params
+	 * @return array|false
+	 */
+    protected static function select(array $fields, array $params = []) {
+    	if (empty($fields)) return false;
+
+    	$whereStmt = '';
+		$whereParams = [];
+
+    	$varCount = 0;
+    	$groupsCount = 0;
+
+    	foreach ($params as $key => $value) {
+    		if (is_int($value)) { // Boolean operators
+    			switch ($value) { // for autoclosing groups
+					case self::DB_GROUPSTART: $groupsCount++;
+						break;
+					case self::DB_GROUPEND:
+						if ($groupsCount > 0) $groupsCount--;
+						break;
+				}
+    			$whereStmt.= self::DB_OPERATORS[$value];
+			} else {
+    			$field = array_keys($value)[0];
+    			$whereStmt.= $field;
+
+    			$param = $value[$field];
+				if (!is_array($param)) // for ["field" => val]
+					$param = [
+						"op" => self::DB_EQ,
+						"val" => $param
+					];
+
+				$op = $param["op"];
+				$val= $param["val"];
+				$paramName = "var$varCount";
+
+				if ($op === self::DB_BETWEEN) {
+					$whereStmt.= self::DB_OPERATORS[self::DB_BETWEEN] . ":1$paramName" . self::DB_OPERATORS[self::DB_AND] . ":2$paramName";
+					$whereParams["1$paramName"] = $val[0];
+					$whereParams["2$paramName"] = $val[1];
+				} else {
+					$whereStmt.= self::DB_OPERATORS[$op] . ":$paramName";
+					$whereParams[$paramName] = $val;
+				}
+				$varCount++;
+			}
+		}
+
+    	for (;$groupsCount > 0; $groupsCount--) // Close groups
+    		$whereStmt.= self::DB_OPERATORS[self::DB_GROUPEND];
+
+    	foreach ($whereParams as $key => $val) {
+    		if ($val instanceof DateTime)
+    			$whereParams[$key] = $val->format('Y-m-d H:i:s');
+			else if ($val instanceof Model)
+				$whereParams[$key] = $val->getId();
+		}
+
+    	if ($whereStmt != '') $whereStmt = "WHERE $whereStmt";
+
+		return Configuration::DB()->execute(sprintf("SELECT %s FROM `%s` %s;", implode($fields, ', '), static::$tblName, $whereStmt), $whereParams);
+	}
 
 	/**
 	 * Insert an entry
