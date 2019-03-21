@@ -188,7 +188,6 @@ class Model {
 		}
 
     	if ($whereStmt != '') $whereStmt = "WHERE $whereStmt";
-		return Configuration::DB()->execute(sprintf("SELECT %s FROM `%s` %s;", implode($fields, ', '), static::$tblName, $whereStmt), $whereParams);
 		return Configuration::DB()->execute(sprintf("SELECT %s FROM `%s` %s %s%s;", implode($fields, ', '), static::$tblName, $whereStmt, $orderBy, $limitStmt), $whereParams);
 	}
 
