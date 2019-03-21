@@ -17,6 +17,8 @@ class Model {
 		23 => ' >= ',
 		24 => ' < ',
 		25 => ' <= ',
+        30 => ' ORDER BY ',
+        40 => ' LIMIT '
 	];
 
 	/**
@@ -66,11 +68,25 @@ class Model {
 	 */
 	protected const DB_LE = 25;
 
+    /**
+     * Order by field(s)
+     */
+    protected const DB_ORDER_BY = 30;
+    /**
+     * Limit result
+     */
+    protected const DB_LIMIT = 40;
+
 	/**
 	 * Name of the table in the database
 	 * @var string
 	 */
     protected static $tblName = '';
+    /**
+     * Default order of the objects
+     * @var string|array[string]
+     */
+    protected static $defaultOrder = ['_id'];
 
     /**
      * Children should not have access this
@@ -88,7 +104,7 @@ class Model {
 
         if (!isset(self::$all[$class])) {
             self::$all[$class] = [];
-            $models = self::select(['_id']);
+            $models = self::select(['_id'], [self::DB_ORDER_BY => static::$defaultOrder]);
             if ($models !== false)
             	foreach ($models as $model)
 					self::$all[$class][] = new static($model["_id"]);
@@ -108,19 +124,32 @@ class Model {
     	$whereStmt = '';
 		$whereParams = [];
 
+		$orderBy = '';
+        $limitStmt = '';
+
     	$varCount = 0;
     	$groupsCount = 0;
 
     	foreach ($params as $key => $value) {
-    		if (is_int($value)) { // Boolean operators
-    			switch ($value) { // for autoclosing groups
-					case self::DB_GROUPSTART: $groupsCount++;
-						break;
-					case self::DB_GROUPEND:
-						if ($groupsCount > 0) $groupsCount--;
-						break;
-				}
-    			$whereStmt.= self::DB_OPERATORS[$value];
+    		if (is_int($value) || (is_int($key) && $key !== 0)) { // Boolean operators AND Limit, order by
+                if (is_int($key) && $key !== 0) {
+                    if (!empty($value))
+                        if ($key === self::DB_LIMIT) $limitStmt = self::DB_OPERATORS[$key] . $value;
+                        elseif ($key === self::DB_ORDER_BY) {
+                            if (!is_array($value)) $value = [$value];
+                            $orderBy = self::DB_OPERATORS[$key] . implode($value, ", ");
+                        }
+                } else {
+                    switch ($value) { // for autoclosing groups
+                        case self::DB_GROUPSTART:
+                            $groupsCount++;
+                            break;
+                        case self::DB_GROUPEND:
+                            if ($groupsCount > 0) $groupsCount--;
+                            break;
+                    }
+                    $whereStmt.= self::DB_OPERATORS[$value];
+                }
 			} else {
     			$field = array_keys($value)[0];
     			$whereStmt.= $field;
@@ -159,8 +188,8 @@ class Model {
 		}
 
     	if ($whereStmt != '') $whereStmt = "WHERE $whereStmt";
-
 		return Configuration::DB()->execute(sprintf("SELECT %s FROM `%s` %s;", implode($fields, ', '), static::$tblName, $whereStmt), $whereParams);
+		return Configuration::DB()->execute(sprintf("SELECT %s FROM `%s` %s %s%s;", implode($fields, ', '), static::$tblName, $whereStmt, $orderBy, $limitStmt), $whereParams);
 	}
 
 	/**
@@ -228,6 +257,7 @@ class Model {
 
     	$sql = "";
 		foreach ($params as $key => $val) {
+            if ($key == "id" || $key == "_id") continue;
 			if ($val instanceof Model) // Send null for empty foreign key
 				$params[$key] = $val->getId() <= 0 ? null : $val->getId();
 			elseif ($val instanceof DateTime)
