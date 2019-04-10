@@ -61,7 +61,7 @@ function createClassFile($name, $cols) {
 		if (strpos($fieldName, Configuration::DB_ENDWORD_ID) !== false) {
 			$funcName = rtrim($funcName, Configuration::DB_ENDWORD_ID);
 			$requireContent.= sprintf($fileParts["require_once"], $funcName);
-			$getByContent.= sprintf($fileParts["get_by"], $funcName, lcfirst($funcName));
+			$getByContent.= sprintf($fileParts["get_by"], $funcName, lcfirst($funcName), $name);
 			$type = $funcName;
 			$innerGet = sprintf($fileParts["get_foreign"], $fieldName, $funcName);
 		}
