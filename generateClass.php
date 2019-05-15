@@ -89,7 +89,7 @@ function createClassFile($name, $cols) {
 	$classContent = sprintf($fileParts["class"], $name,  $getByContent, $privateContent, $propertiesContent, sprintf($fileParts["construct"], $constructContent), sprintf($fileParts["update"], $name));
 	$fileContent = sprintf($fileParts["file"], $requireContent, $classContent);
 
-	$file = fopen("DB/$name.php", "w");
+	$file = fopen("DB/" . ucfirst($name) . ".php", "w");
 	fwrite($file, $fileContent);
 	fclose($file);
 }
