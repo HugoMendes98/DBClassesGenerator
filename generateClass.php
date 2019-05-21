@@ -1,4 +1,4 @@
-<?php require_once './Configuration.php';
+<?php require_once __DIR__ . '/Configuration.php';
 
 $dir = __DIR__ . '/export';
 $val = getopt("d:", ["dir:"]);
@@ -20,7 +20,7 @@ function convertSql2PhpType($type) {
 	return 'null';
 }
 
-$fileParts = json_decode(file_get_contents('fileParts.json'), true);
+$fileParts = json_decode(file_get_contents(__DIR__ . '/fileParts.json'), true);
 
 $db = Configuration::DB();
 foreach ($db->query('SHOW TABLES;')->fetchAll() as $table) {
