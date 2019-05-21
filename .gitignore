@@ -9,4 +9,6 @@ DB/*
 !DB/DB.php
 !DB/Model.php
 
+export/
 !.gitignore
+!/**/.gitkeep

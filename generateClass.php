@@ -1,5 +1,11 @@
 <?php require_once './Configuration.php';
 
+$dir = __DIR__ . '/export';
+$val = getopt("d:", ["dir:"]);
+if ($val !== false && $val) {
+    $dir = isset($val["d"]) ? $val["d"] : $val["dir"];
+}
+
 function convertSql2PhpType($type) {
 	if (strpos($type, 'TINYINT(1)') !== false)
 		return 'bool';
@@ -40,7 +46,7 @@ foreach ($db->query('SHOW TABLES;')->fetchAll() as $table) {
 }
 
 function createClassFile($name, $cols) {
-	global $fileParts;
+	global $fileParts, $dir;
 
 	$requireContent = sprintf($fileParts["require_once"], 'Model');
 	$getByContent = '';
@@ -48,11 +54,15 @@ function createClassFile($name, $cols) {
 	$constructContent = '';
 	$propertiesContent = '';
 
+	$jsonFunction = '';
+
 	foreach ($cols as $col) {
 		$fieldName = $col["name"];
 		$funcName = ucfirst($fieldName);
 		$type = $col["type"];
 		$defaultValue = $col["default"];
+
+        $jsonReturn = "get$funcName()";
 
 		// some get functions return an object
 		$innerGet = '';
@@ -64,6 +74,8 @@ function createClassFile($name, $cols) {
 			$getByContent.= sprintf($fileParts["get_by"], $funcName, lcfirst($funcName), $name);
 			$type = $funcName;
 			$innerGet = sprintf($fileParts["get_foreign"], $fieldName, $funcName);
+
+            $jsonReturn = "get$funcName()->getId()";
 		}
 
 		if ($defaultValue === null)
@@ -71,25 +83,34 @@ function createClassFile($name, $cols) {
 		else if ($type === "string" || $type === "DateTime")
 			$defaultValue = "'$defaultValue'";
 		else if ($type === "bool")
-			$defaultValue = $defaultValue ? "true" : "false";
+            $defaultValue = $defaultValue ? "true" : "false";
 		$privateContent.= sprintf($fileParts["private_var"], $fieldName, $defaultValue);
 
 		if ($type === "DateTime") {
 			$innerGet = sprintf($fileParts["get_foreign"], $fieldName, "DateTime");
+            $jsonReturn.= "->getTimestamp()";
 		}
 
 		if ($type === "bool" && (substr(strtolower($fieldName), 0, 2) == 'is' || substr(strtolower($fieldName), 0, 3) == 'has')) {
 			$propertiesContent.= sprintf($fileParts["get_bool"], $fieldName);
+            $jsonReturn = "$fieldName()";
 		} else // int for bool when we set
 			$propertiesContent.= sprintf($fileParts["get"], $funcName, $fieldName, $type, $innerGet) . sprintf($fileParts["set"], $funcName, lcfirst($funcName), $fieldName, $type === "bool" ? "int" : $type);
 		$constructContent.= sprintf($fileParts["construct_get"], $fieldName);
+
+        $jsonFunction.= "\t\t\t\"$fieldName\" => \$this->$jsonReturn,\n";
 	}
 
+	$jsonFunction.= "\t\t\t\"id\" => \$this->getId()";
 
-	$classContent = sprintf($fileParts["class"], $name,  $getByContent, $privateContent, $propertiesContent, sprintf($fileParts["construct"], $constructContent), sprintf($fileParts["update"], $name));
+	$classContent = sprintf($fileParts["class"], $name,  $getByContent, $privateContent, $propertiesContent, sprintf($fileParts["get_json"], $jsonFunction) ,sprintf($fileParts["construct"], $constructContent), sprintf($fileParts["update"], $name));
 	$fileContent = sprintf($fileParts["file"], $requireContent, $classContent);
 
-	$file = fopen("DB/$name.php", "w");
+	$file = fopen("$dir/$name.php", "w");
 	fwrite($file, $fileContent);
 	fclose($file);
 }
+
+copy(__DIR__ . '/DB/DB.php', "$dir/DB.php");
+copy(__DIR__ . '/DB/Model.php', "$dir/Model.php");
+copy(__DIR__ . '/Configuration.php.example', "$dir/Configuration.php");
