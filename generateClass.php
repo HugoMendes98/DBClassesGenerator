@@ -106,7 +106,7 @@ function createClassFile($name, $cols) {
 	$classContent = sprintf($fileParts["class"], $name,  $getByContent, $privateContent, $propertiesContent, sprintf($fileParts["get_json"], $jsonFunction) ,sprintf($fileParts["construct"], $constructContent), sprintf($fileParts["update"], $name));
 	$fileContent = sprintf($fileParts["file"], $requireContent, $classContent);
 
-	$file = fopen("$dir/$name.php", "w");
+	$file = fopen("$dir/". ucfirst($name) .".php", "w");
 	fwrite($file, $fileContent);
 	fclose($file);
 }
